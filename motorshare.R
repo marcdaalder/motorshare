@@ -81,9 +81,34 @@ df_mshare <- df_reg %>%
 
 write_csv(df_mshare,'/Users/marcdaalder/RStudio/motorshare/mshare.csv', append=FALSE) #write csv
 
-is.date <- function(x) inherits (x, 'Date')
-
-sapply(list(as.Date('2000-01-01'),123,'ABC',df_streamreg$Date),is.date)
+df_counter <- df_reg %>%
+  mutate(Date = paste0(substr(`Month of Registration date`,1,3),'-',substr(`Year of Registration date`,3,4))) %>% #create appropriately formatted date column
+  mutate(`Variable selected` = ifelse(`Variable selected` %in% c('Hybrid Petrol','Hybrid Diesel'),'Petrol/diesel hybrid',`Variable selected`)) %>% #replacing individuals hybrids with combined cat
+  mutate(`Variable selected` = ifelse(`Variable selected` %in% c('PHEV Petrol','PHEV Diesel'),'Plug-in hybrid',`Variable selected`)) %>% #replacing individuals PHEVs with combined cat
+  mutate(`Variable selected` = ifelse(`Variable selected` == 'Battery Electric','Battery electric',`Variable selected`)) %>% #Renaming BEVs
+  group_by(`Date`,`Variable selected`) %>% #removing superfluous columns
+  summarise(`Number of vehicles` = sum(`Number of vehicles`, na.rm=TRUE), .groups = 'drop') %>% #summing by number of vehicles
+  pivot_wider(names_from=`Variable selected`,values_from = `Number of vehicles`) %>%
+  rename('Total' = `NA`) %>%
+  mutate(Date = dmy(paste0('01-', Date))) %>% #reformat date column
+  arrange(Date) %>% #order by date
+  mutate(`Actual figures` = cumsum(`Battery electric` + `Plug-in hybrid`)) %>%
+  mutate(Diesel = NULL,
+         `Fuel-cell (H2)` = NULL,
+         `LPG/Other` = NULL,
+         Petrol = NULL,
+         `Fuel-cell (other)` = NULL,
+         `Petrol/diesel hybrid` = NULL,
+         `Battery electric`= NULL,
+         `Plug-in hybrid` = NULL
+  ) %>%
+  
+  mutate(`Pre-election growth rate` = ifelse(Date > as.Date('2023-09-15'),as.integer(Total * 0.138934),ifelse(Date > as.Date('2023-08-15'),as.integer(`Actual figures`),NA))) %>%
+  
+  mutate(Total = NULL)
+  
+  
+  
 
 
 
