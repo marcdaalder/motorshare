@@ -42,13 +42,13 @@ df_changereg <- df_reg %>%
   group_by(`Year of Registration date`,`Month of Registration date`,`Variable selected`) %>% #reduce excess entries
   summarise(`Number of vehicles` = sum(`Number of vehicles`, na.rm=TRUE)) %>% #summing by number of vehicles
   pivot_wider(names_from = `Year of Registration date`, values_from=`Number of vehicles`) %>% #break up year column into two columns
-  mutate(Change = ((`2024`/`2023`)-1)) %>% #create new change column with value
+  mutate(Change = ((`2025`/`2024`)-1)) %>% #create new change column with value
   mutate(Change = percent(Change,accuracy=1)) %>% #make percentage
   mutate(Date = paste0(substr(`Month of Registration date`,1,3),'-',substr(current_year,3,4))) %>% #create appropriately formatted date column
   group_by(`Date`, `Variable selected`) %>% #group??
   mutate(`Month of Registration date` = NULL) %>% #remove superfluous column
-  mutate(`2023` = NULL) %>% #ibid
   mutate(`2024` = NULL) %>% #ibid
+  mutate(`2025` = NULL) %>% #ibid
   pivot_wider(names_from=`Variable selected`,values_from = `Change`) %>% #un-tidy the data
   mutate(Date = dmy(paste0('01-', Date))) %>% #reformat date column
   arrange(Date) %>% #order by date
